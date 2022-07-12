@@ -1,5 +1,6 @@
 const { response } = require('express')
 const Pregunta = require('../models/Pregunta')
+const PreguntaDependencia = require('../models/PreguntaDependencia')
 
 
 const preguntaControllerGet = async(req, res = response) => {

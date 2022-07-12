@@ -12,8 +12,7 @@ const PreguntaSchema = Schema({
     },
     cod_tipo_respuesta:{
         type: Schema.Types.ObjectId,
-        ref: 'SetRespuesta',
-        required: true
+        ref: 'SetRespuesta'
     },
     id_formato_pregunta:{
         type: String,
@@ -22,8 +21,7 @@ const PreguntaSchema = Schema({
     },
     pregunta_dependencia:{
         type: Schema.Types.ObjectId,
-        ref: 'PreguntaDependencia',
-        required: true
+        ref: 'PreguntaDependencia'
     },
     n_orden:{
         type: Number,
