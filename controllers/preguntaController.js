@@ -13,10 +13,13 @@ const preguntaControllerGet = async(req, res = response) => {
         offset: (pagina - 1) * limite,
         select: '_id descripcion_pregunta cod_tipo_respuesta subtitulo_pregunta grupo n_orden  habilitado',
         populate: [{ path:'cod_tipo_respuesta', 
-                    select: {descripcion_set_respuesta: 1, _id: 1}
+                        select: {descripcion_set_respuesta: 1, _id: 1}
                     },
                     { path:'grupo', 
-                    select: {descripcion_grupo: 1, _id: 1}    
+                        select: {descripcion_grupo: 1, _id: 1}    
+                    },
+                    { path: 'pregunta_dependencia',
+                        select: { pregunta_madre: 1, respuesta_madre: 1, _id: 1}
                     }
         ],
         sort: 'n_orden',
@@ -38,8 +41,14 @@ const preguntaControllerGet = async(req, res = response) => {
 const preguntaControllerPost = async(req, res) => {
     
     const pregunta = new Pregunta (req.body)
-
     try {
+        if (req.body.pregunta_madre) {
+            const { pregunta_madre, respuesta_madre} = req.body
+            const pregunta_hija = pregunta._id
+            const preguntaDependiente = new PreguntaDependencia ({pregunta_hija, pregunta_madre, respuesta_madre, habiltado : 'S'})
+            let preguntaDependienteGuardada = await preguntaDependiente.save()
+            pregunta.pregunta_dependencia = preguntaDependienteGuardada._id      
+        }
         let preguntaGuardada = await pregunta.save()
         const {_id } = preguntaGuardada
         preguntaGuardada = await Pregunta.findById(_id)
@@ -48,6 +57,9 @@ const preguntaControllerPost = async(req, res) => {
                                         })
                                         .populate({ path:'grupo', 
                                                 select: {descripcion_grupo: 1, _id: 1}
+                                        })
+                                        .populate({ path: 'pregunta_dependencia',
+                                                select: { pregunta_madre: 1, respuesta_madre: 1, _id: 1}
                                         })
         
         res.json({
