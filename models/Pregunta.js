@@ -19,10 +19,10 @@ const PreguntaSchema = Schema({
         required: true,
         enum: ['input', 'radio', 'checkbox', 'select']
     },
-    pregunta_dependencia:{
-        type: Schema.Types.ObjectId,
-        ref: 'PreguntaDependencia'
-    },
+    pregunta_dependencia:[{
+            type: Schema.Types.ObjectId,
+            ref: 'PreguntaDependencia'
+    }],
     n_orden:{
         type: Number,
         required: true

@@ -1,4 +1,5 @@
 const { response } = require('express')
+const { default: mongoose } = require('mongoose')
 const Pregunta = require('../models/Pregunta')
 const PreguntaDependencia = require('../models/PreguntaDependencia')
 
@@ -11,7 +12,7 @@ const preguntaControllerGet = async(req, res = response) => {
         page: pagina,
         limit: limite,
         offset: (pagina - 1) * limite,
-        select: '_id descripcion_pregunta cod_tipo_respuesta subtitulo_pregunta grupo n_orden  habilitado',
+        select: '_id descripcion_pregunta cod_tipo_respuesta subtitulo_pregunta grupo n_orden pregunta_dependencia habilitado',
         populate: [{ path:'cod_tipo_respuesta', 
                         select: {descripcion_set_respuesta: 1, _id: 1}
                     },
@@ -19,7 +20,7 @@ const preguntaControllerGet = async(req, res = response) => {
                         select: {descripcion_grupo: 1, _id: 1}    
                     },
                     { path: 'pregunta_dependencia',
-                        select: { pregunta_madre: 1, respuesta_madre: 1, _id: 1}
+                        select: {pregunta_madre: 1, respuesta_madre:1 ,_id: 1}
                     }
         ],
         sort: 'n_orden',
@@ -80,7 +81,7 @@ const preguntaControllerPost = async(req, res) => {
 const preguntaContollerPut =  async(req, res = response) => {
     const idPregunta = req.params.id
     const preguntaUpdate = req.body
-
+    
     try {
         const pregunta = await Pregunta.findById(idPregunta)
         if (!pregunta) {
@@ -89,7 +90,30 @@ const preguntaContollerPut =  async(req, res = response) => {
                 msg: 'No existe una pregunta con ese id en base de datos'
             })
         }
+        
+        if (preguntaUpdate.pregunta_dependencia) {
+            let {pregunta_dependencia, _id : pregunta_hija} = preguntaUpdate
+            console.log('pregunta dependencia', pregunta_dependencia,
+            'pregunta_hija: ', pregunta_hija)
+            let preg
+            for (let dependencia of pregunta_dependencia) {
+                if(!dependencia._id){
+                    dependencia = { pregunta_hija, habilitado:'S', ...dependencia}
+                    console.log('dependencia',dependencia)    
+                    const preguntaDependiente = new PreguntaDependencia (dependencia)
+                    preg = await preguntaDependiente.save()
+                }
+            }
+            await pregunta_dependencia.push(preg._id)
+            pregunta_dependencia = pregunta_dependencia.filter( dep => dep._id instanceof mongoose.Types.ObjectId || dep.pregunta_hija) 
+            console.log('segunda preg dep',pregunta_dependencia)
+           preguntaUpdate.pregunta_dependencia = pregunta_dependencia
+            
+            
+        }
+        console.log('preguntaUpdate', preguntaUpdate)
         const valor = await Pregunta.replaceOne({_id: idPregunta}, preguntaUpdate, {new: true})
+       
         if (valor.modifiedCount) {
             const preguntaActualizada = await Pregunta.findById(idPregunta)
                                                         .populate({ path:'cod_tipo_respuesta', 
@@ -98,7 +122,10 @@ const preguntaContollerPut =  async(req, res = response) => {
                                                         .populate({ path:'grupo', 
                                                                     select: {descripcion_grupo: 1, _id: 1}
                                                         })
-    
+                                                        .populate({ path: 'pregunta_dependencia',
+                                                                    select: { pregunta_madre: 1, respuesta_madre: 1, _id: 1}
+                                                        })
+                    
             res.json({
                 ok: true,
                 preguntaActualizada
