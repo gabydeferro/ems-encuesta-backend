@@ -19,6 +19,7 @@ app.use('/controllers/grupo', require('./routers/grupoRouter'))
 app.use('/controllers/pregunta', require('./routers/preguntaRouter'))
 app.use('/controllers/respuesta', require('./routers/respuestaRouter'))
 app.use('/controllers/setrespuesta', require('./routers/setrespuestaRouter'))
+app.use('/controllers/preguntaDependencia', require('./routers/preguntadependenciaRouter'))
 app.use('/controllers/busqueda', require('./routers/busquedaRouter'))
 
 app.listen ( port, () => {
