@@ -77,6 +77,7 @@ const setRespuestaControllerDelete = async( req, res = response) => {
         
         try {
             const setRespuestaModificado = await SetRespuesta.findByIdAndUpdate(idSetRespuesta, {'habilitado': habilitado}, {new: true})
+            
             res.json({
                 ok: true,
                 setRespuestaModificado

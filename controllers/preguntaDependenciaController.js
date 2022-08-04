@@ -10,15 +10,18 @@ const preguntaDependenciaControllerGet = async(req, res = response) => {
         limit: limite,
         offset: (pagina - 1) * limite,
         select: '_id pregunta_hija pregunta_madre respuesta_madre habilitado',
-        populate: [{ path:'pregunta_madre', 
-                        select: {descripcion_pregunta: 1, _id: 1}
-                    },
-                    { path:'respuesta_madre', 
-                        select: {descripcion_respuesta: 1, _id: 1}    
-                    }
+        populate: [
+            { 
+                path:'pregunta_madre', 
+                select: {descripcion_pregunta: 1, _id: 1}
+            },
+            { 
+                path:'respuesta_madre', 
+                select: {descripcion_respuesta: 1, _id: 1}    
+            }
         ],               
         customLabels: {docs: 'preguntaDependencias'} // cambio el nombre de la etiqueta que devuelve los documentos
-      }
+    }
     
     const {preguntaDependencias} = await PreguntaDependencia.paginate({}, options)
     
@@ -34,15 +37,16 @@ const preguntaDependenciaControllerPost = async(req, res) => {
     try {
         let preguntaDependenciaGuardada = await preguntaDependencia.save()
         const { _id } = preguntaDependenciaGuardada
-        preguntaDependenciaGuardada = await PreguntaDependencia.findById (_id)
-                                                        .populate({
-                                                            path: 'pregunta_madre',
-                                                            select:{ descripcion_pregunta:1, _id:1}
-                                                        })
-                                                        .populate({
-                                                            path: 'respuesta_madre',
-                                                            select: { descripcion_respuesta:1, _id:1}
-                                                        })
+        preguntaDependenciaGuardada = await PreguntaDependencia
+        .findById (_id)
+        .populate({
+            path: 'pregunta_madre',
+            select:{ descripcion_pregunta:1, _id:1}
+        })
+        .populate({
+            path: 'respuesta_madre',
+            select: { descripcion_respuesta:1, _id:1}
+        })
         
         res.json({
             ok: true,
@@ -71,15 +75,16 @@ const preguntaDependenciaContollerPut =  async(req, res = response) => {
                 msg: 'No existe una preguntaDependencia con ese id en base de datos'
             })
         }
-        const preguntaDependenciaActualizada = await PreguntaDependencia.findByIdAndUpdate(idPreguntaDependencia, preguntaDependenciaUpdate, {new: true})
-                                                        .populate({
-                                                            path: 'pregunta_madre',
-                                                            select:{ descripcion_pregunta:1, _id:1}
-                                                        })
-                                                        .populate({
-                                                            path: 'respuesta_madre',
-                                                            select: { descripcion_respuesta:1, _id:1}
-                                                        })
+        const preguntaDependenciaActualizada = await PreguntaDependencia
+        .findByIdAndUpdate(idPreguntaDependencia, preguntaDependenciaUpdate, {new: true})
+        .populate({
+            path: 'pregunta_madre',
+            select:{ descripcion_pregunta:1, _id:1}
+        })
+        .populate({
+            path: 'respuesta_madre',
+            select: { descripcion_respuesta:1, _id:1}
+        })
 
         res.json({
             ok: true,
@@ -95,33 +100,33 @@ const preguntaDependenciaContollerPut =  async(req, res = response) => {
 }
 
 const preguntaDependenciaControllerDelete = async( req, res = response) => {
-        const idPreguntaDependencia = req.params.id
-        const {habilitado} = req.body
+    const idPreguntaDependencia = req.params.id
+    const {habilitado} = req.body
+    
+    try {
+        const preguntaDependenciaModificada = await PreguntaDependencia
+        .findByIdAndUpdate(idPreguntaDependencia, {'habilitado': habilitado}, {new: true})
+        .populate({
+            path: 'pregunta_madre',
+            select:{ descripcion_pregunta:1, _id:1}
+        })
+        .populate({
+            path: 'respuesta_madre',
+            select: { descripcion_respuesta:1, _id:1}
+        })
         
-        try {
-            const preguntaDependenciaModificado = await PreguntaDependencia.findByIdAndUpdate(idPreguntaDependencia, {'habilitado': habilitado}, {new: true})
-                                                            .populate({
-                                                                path: 'pregunta_madre',
-                                                                select:{ descripcion_pregunta:1, _id:1}
-                                                            })
-                                                            .populate({
-                                                                path: 'respuesta_madre',
-                                                                select: { descripcion_respuesta:1, _id:1}
-                                                            })
-            
-            
-            res.json({
-                ok: true,
-                preguntaDependenciaModificado
-            })
-            
-        } catch (error) {
-            console.log(error)
-            res.status(500).json({
-                ok:false,
-                msg: 'Error al intentar eliminar preguntaDependencia, hable con el administrador'
-            })
-        }
+        res.json({
+            ok: true,
+            preguntaDependenciaModificada
+        })
+        
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            ok:false,
+            msg: 'Error al intentar eliminar preguntaDependencia, hable con el administrador'
+        })
+    }
 }
 
 module.exports = {

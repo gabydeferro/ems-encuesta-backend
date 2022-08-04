@@ -12,21 +12,20 @@ const preguntaControllerGet = async(req, res = response) => {
         page: pagina,
         limit: limite,
         offset: (pagina - 1) * limite,
-        select: '_id descripcion_pregunta cod_tipo_respuesta subtitulo_pregunta grupo n_orden pregunta_dependencia habilitado',
-        populate: [{ path:'cod_tipo_respuesta', 
-                        select: {descripcion_set_respuesta: 1, _id: 1}
-                    },
-                    { path:'grupo', 
-                        select: {descripcion_grupo: 1, _id: 1}    
-                    },
-                    { path: 'pregunta_dependencia',
-                        select: {pregunta_madre: 1, respuesta_madre:1 ,_id: 1}
-                    }
+        select: '_id descripcion_pregunta cod_tipo_respuesta subtitulo_pregunta grupo n_orden habilitado',
+        populate: [
+            { 
+                path:'cod_tipo_respuesta', 
+                select: {descripcion_set_respuesta: 1, _id: 1}
+            },
+            { 
+                path:'grupo', 
+                select: {descripcion_grupo: 1, _id: 1}    
+            },
         ],
         sort: 'n_orden',
         customLabels: {docs: 'preguntas'} // cambio el nombre de la etiqueta que devuelve los documentos
-      }
-
+    }
     
     const {preguntas, ...paginacion} = await Pregunta.paginate({}, options)
     const ultimaPregunta = await Pregunta.find().sort({'n_orden': -1}).limit(1)
@@ -43,26 +42,19 @@ const preguntaControllerPost = async(req, res) => {
     
     const pregunta = new Pregunta (req.body)
     try {
-        if (req.body.pregunta_madre) {
-            const { pregunta_madre, respuesta_madre} = req.body
-            const pregunta_hija = pregunta._id
-            const preguntaDependiente = new PreguntaDependencia ({pregunta_hija, pregunta_madre, respuesta_madre, habiltado : 'S'})
-            let preguntaDependienteGuardada = await preguntaDependiente.save()
-            pregunta.pregunta_dependencia = preguntaDependienteGuardada._id      
-        }
         let preguntaGuardada = await pregunta.save()
         const {_id } = preguntaGuardada
-        preguntaGuardada = await Pregunta.findById(_id)
-                                        .populate({ path:'cod_tipo_respuesta', 
-                                        select: {descripcion_set_respuesta: 1, _id: 1}
-                                        })
-                                        .populate({ path:'grupo', 
-                                                select: {descripcion_grupo: 1, _id: 1}
-                                        })
-                                        .populate({ path: 'pregunta_dependencia',
-                                                select: { pregunta_madre: 1, respuesta_madre: 1, _id: 1}
-                                        })
-        
+        preguntaGuardada = await Pregunta
+            .findById(_id)
+            .populate({ 
+                path:'cod_tipo_respuesta', 
+                select: {descripcion_set_respuesta: 1, _id: 1}
+            })
+            .populate({ 
+                path:'grupo', 
+                select: {descripcion_grupo: 1, _id: 1}
+            })
+                                        
         res.json({
             ok: true,
             preguntaGuardada
@@ -91,41 +83,20 @@ const preguntaContollerPut =  async(req, res = response) => {
             })
         }
         
-        if (preguntaUpdate.pregunta_dependencia) {
-            let {pregunta_dependencia, _id : pregunta_hija} = preguntaUpdate
-            console.log('pregunta dependencia', pregunta_dependencia,
-            'pregunta_hija: ', pregunta_hija)
-            let preg
-            for (let dependencia of pregunta_dependencia) {
-                if(!dependencia._id){
-                    dependencia = { pregunta_hija, habilitado:'S', ...dependencia}
-                    console.log('dependencia',dependencia)    
-                    const preguntaDependiente = new PreguntaDependencia (dependencia)
-                    preg = await preguntaDependiente.save()
-                }
-            }
-            await pregunta_dependencia.push(preg._id)
-            pregunta_dependencia = pregunta_dependencia.filter( dep => dep._id instanceof mongoose.Types.ObjectId || dep.pregunta_hija) 
-            console.log('segunda preg dep',pregunta_dependencia)
-           preguntaUpdate.pregunta_dependencia = pregunta_dependencia
-            
-            
-        }
-        console.log('preguntaUpdate', preguntaUpdate)
         const valor = await Pregunta.replaceOne({_id: idPregunta}, preguntaUpdate, {new: true})
        
         if (valor.modifiedCount) {
-            const preguntaActualizada = await Pregunta.findById(idPregunta)
-                                                        .populate({ path:'cod_tipo_respuesta', 
-                                                                    select: {descripcion_set_respuesta: 1, _id: 1}
-                                                        })
-                                                        .populate({ path:'grupo', 
-                                                                    select: {descripcion_grupo: 1, _id: 1}
-                                                        })
-                                                        .populate({ path: 'pregunta_dependencia',
-                                                                    select: { pregunta_madre: 1, respuesta_madre: 1, _id: 1}
-                                                        })
-                    
+            const preguntaActualizada = await Pregunta
+                .findById(idPregunta)
+                .populate({ 
+                    path:'cod_tipo_respuesta', 
+                    select: {descripcion_set_respuesta: 1, _id: 1}
+                })
+                .populate({ 
+                    path:'grupo', 
+                    select: {descripcion_grupo: 1, _id: 1}
+                })
+
             res.json({
                 ok: true,
                 preguntaActualizada
@@ -142,29 +113,33 @@ const preguntaContollerPut =  async(req, res = response) => {
 }
 
 const preguntaControllerDelete = async( req, res = response) => {
-        const idPregunta = req.params.id
-        const {habilitado} = req.body
+    const idPregunta = req.params.id
+    const {habilitado} = req.body
+    
+    try {
+        const preguntaModificada = await Pregunta
+        .findByIdAndUpdate(idPregunta, {'habilitado': habilitado}, {new: true})
+        .populate({ 
+            path:'cod_tipo_respuesta', 
+            select: {descripcion_set_respuesta: 1, _id: 1}
+        })
+        .populate({ 
+            path:'grupo', 
+            select: {descripcion_grupo: 1, _id: 1}
+        })
+
+    res.json({
+        ok: true,
+        preguntaModificada
+    })
         
-        try {
-            const preguntaModificada = await Pregunta.findByIdAndUpdate(idPregunta, {'habilitado': habilitado}, {new: true})
-                                                    .populate({ path:'cod_tipo_respuesta', 
-                                                                select: {descripcion_set_respuesta: 1, _id: 1}
-                                                    })
-                                                    .populate({ path:'grupo', 
-                                                                select: {descripcion_grupo: 1, _id: 1}
-                                                    })
-            res.json({
-                ok: true,
-                preguntaModificada
-            })
-            
-        } catch (error) {
-            console.log(error)
-            res.status(500).json({
-                ok:false,
-                msg: 'Error al intentar eliminar pregunta, hable con el administrador'
-            })
-        }
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            ok:false,
+            msg: 'Error al intentar eliminar pregunta, hable con el administrador'
+        })
+    }
 }
 
 module.exports = {

@@ -10,11 +10,12 @@ const respuestaControllerGet = async(req, res = response) => {
         limit: limite,
         offset: (pagina - 1) * limite,
         // select: '_id descripcion_respuesta set_respuesta n_orden habilitado',
-        populate: { path:'set_respuesta', 
-                    select: {
-                        descripcion_set_respuesta: 1,
-                         _id: 1
-                    }
+        populate: { 
+            path:'set_respuesta', 
+            select: {
+                descripcion_set_respuesta: 1,
+                _id: 1
+            }
         },
         sort: 'n_orden',
         customLabels: {docs: 'respuestas'} // cambio el nombre de la etiqueta que devuelve los documentos
@@ -36,10 +37,12 @@ const respuestaControllerPost = async(req, res) => {
     try {
         let respuestaGuardada = await respuesta.save()
         const { _id } = respuestaGuardada
-        respuestaGuardada = await Respuesta.findById(_id)
-                                            .populate({ path:'set_respuesta', 
-                                                        select: {descripcion_set_respuesta: 1, _id: 1}
-                                            })
+        respuestaGuardada = await Respuesta
+        .findById(_id)
+        .populate({ 
+            path:'set_respuesta', 
+            select: {descripcion_set_respuesta: 1, _id: 1}
+        })
 
         res.json({
             ok: true,
@@ -70,9 +73,11 @@ const respuestaContollerPut =  async(req, res = response) => {
         }
         const valor = await Respuesta.replaceOne({_id: idRespuesta}, respuestaUpdate, {new: true})
         if (valor.modifiedCount) {
-            const respuestaActualizada = await Respuesta.findById(idRespuesta)
-            .populate({ path:'set_respuesta', 
-                        select: {descripcion_set_respuesta: 1,  _id: 1}
+            const respuestaActualizada = await Respuesta
+            .findById(idRespuesta)
+            .populate({ 
+                path:'set_respuesta', 
+                select: {descripcion_set_respuesta: 1,  _id: 1}
             })   
             res.json({
                 ok: true,
@@ -93,9 +98,12 @@ const respuestaControllerDelete = async( req, res = response) => {
         const {habilitado} = req.body
         
         try {
-            const respuestaModificada = await Respuesta.findByIdAndUpdate(idRespuesta, {'habilitado': habilitado}, {new: true}).populate({ path:'set_respuesta', 
-                                      select: {descripcion_set_respuesta: 1, _id: 1}
-                            })
+            const respuestaModificada = await Respuesta
+            .findByIdAndUpdate(idRespuesta, {'habilitado': habilitado}, {new: true})
+            .populate({ 
+                path:'set_respuesta', 
+                select: {descripcion_set_respuesta: 1, _id: 1}
+            })
 
             res.json({
                 ok: true,

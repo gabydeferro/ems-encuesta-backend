@@ -14,7 +14,7 @@ const busquedaControllerGet = async(req, res = response) => {
         page: pagina,
         limit: limite,
         offset: (pagina - 1) * limite  
-      } 
+    } 
     
     switch (coleccion) {
         case 'grupos':
@@ -59,13 +59,16 @@ const busquedaControllerGet = async(req, res = response) => {
             }
             
             options.select = '_id descripcion_pregunta cod_tipo_respuesta subtitulo_pregunta grupo n_orden  habilitado'
-            options.populate = [{ 
+            options.populate = [
+                { 
                 path:'cod_tipo_respuesta', 
                 select: {descripcion_set_respuesta: 1, _id: 1}
                 },
-                { path:'grupo', 
+                { 
+                path:'grupo', 
                 select: {descripcion_grupo: 1, _id: 1}    
-            }]
+                }
+            ]
             options.customLabels = {docs: 'preguntas'} // cambio el nombre de la etiqueta que devuelve los documentos
             const {preguntas, ...paginacionPregunta} = await Pregunta.paginate(query, options)
             

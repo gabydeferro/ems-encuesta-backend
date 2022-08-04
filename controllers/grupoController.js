@@ -37,11 +37,12 @@ const grupoControllerPost = async(req, res) => {
     try {
         let grupoGuardado = await grupo.save()
         const {_id } = grupoGuardado
-         grupoGuardado = await Grupo.findById(_id)
-            .populate({ path:'grupo_dependiente', 
-                    select: {descripcion_grupo: 1, _id: 1},
-
-            })
+        grupoGuardado = await Grupo
+        .findById(_id)
+        .populate({ 
+            path:'grupo_dependiente', 
+            select: {descripcion_grupo: 1, _id: 1},
+        })
         
         res.json({
             ok: true,
@@ -72,10 +73,12 @@ const grupoContollerPut =  async(req, res = response) => {
         const valor = await Grupo.replaceOne({_id: idGrupo}, grupoUpdate, {new: true})
         //chequea si efectivamente se reemplazo un documento        
         if (valor.modifiedCount) {
-            const grupoActualizado = await Grupo.findById(idGrupo)
-            .populate({ path:'grupo_dependiente', 
-                    select: {descripcion_grupo: 1, _id: 1},
-                })
+            const grupoActualizado = await Grupo
+            .findById(idGrupo)
+            .populate({ 
+                path:'grupo_dependiente', 
+                select: {descripcion_grupo: 1, _id: 1},
+            })
 
             res.json({
                 ok: true,
@@ -97,10 +100,13 @@ const grupoControllerDelete = async( req, res = response) => {
         const {habilitado} = req.body
         
         try {
-            const grupoModificado = await Grupo.findByIdAndUpdate(idGrupo, {'habilitado': habilitado}, {new: true}).populate({ path:'grupo_dependiente', 
-            select: {descripcion_grupo: 1, _id: 1},
-
-    })
+            const grupoModificado = await Grupo
+            .findByIdAndUpdate(idGrupo, {'habilitado': habilitado}, {new: true})
+            .populate({ 
+                path:'grupo_dependiente', 
+                select: {descripcion_grupo: 1, _id: 1},
+            })
+            
             res.json({
                 ok: true,
                 grupoModificado
